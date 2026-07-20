@@ -1,6 +1,13 @@
 import * as THREE from "three";
 import "./style.css";
-import { createPlanet, planetsData, type Planet } from "./planet";
+import {
+  astroData,
+  createAstro,
+  createPlanet,
+  planetsData,
+  createRings,
+  type Planet,
+} from "./planet";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 //Escena
@@ -56,7 +63,23 @@ scene.add(sunLight);
 const ambientLight = new THREE.AmbientLight(0x334466, 0.15);
 scene.add(ambientLight);
 
-//reloj para las animacioncitas
+const astros: Planet[] = [];
+
+planets.forEach((planet) => {
+  const data = astroData[planet.mesh.name] ?? [];
+
+  data.forEach((astroData) => {
+    astros.push(createAstro(planet, astroData));
+  });
+});
+
+//para saturno
+const saturn = planets.find((planet) => planet.mesh.name === "Saturno");
+if (saturn) {
+  createRings(saturn, 2.6, 4.2, "public/textures/2k_saturn_ring_alpha.png");
+}
+
+//reloj para el tiempo de las animacioncitas
 
 const clock = new THREE.Clock();
 
@@ -68,6 +91,11 @@ function animate(): void {
   planets.forEach((planet) => {
     planet.orbit.rotation.y += delta * planet.orbitSpeed;
     planet.mesh.rotation.y += delta * planet.rotationSpeed;
+  });
+
+  astros.forEach((astro) => {
+    astro.orbit.rotation.y += delta * astro.orbitSpeed;
+    astro.mesh.rotation.y += delta * astro.rotationSpeed;
   });
 
   controls.update();

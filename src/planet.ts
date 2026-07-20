@@ -20,6 +20,15 @@ export interface Planet {
   rotationSpeed: number;
 }
 
+export interface astroData {
+  name: string;
+  radius: number;
+  distance: number;
+  texture: string;
+  orbitSpeed: number;
+  rotationSpeed: number;
+}
+
 export const planetsData: PlanetData[] = [
   {
     name: "Mercurio",
@@ -62,7 +71,7 @@ export const planetsData: PlanetData[] = [
     radius: 2.5,
     distance: 24,
     color: 0xc88b55,
-    texture: "jupiter.jpg",
+    texture: "/textures/2k_jupiter.jpg",
     orbitSpeed: 0.13,
     rotationSpeed: 2,
   },
@@ -71,7 +80,7 @@ export const planetsData: PlanetData[] = [
     radius: 2.1,
     distance: 31,
     color: 0xd8c080,
-    texture: "saturn.jpg",
+    texture: "/textures/2k_saturn.jpg",
     orbitSpeed: 0.1,
     rotationSpeed: 1.8,
   },
@@ -80,7 +89,7 @@ export const planetsData: PlanetData[] = [
     radius: 1.5,
     distance: 38,
     color: 0x88ddff,
-    texture: "uranus.jpg",
+    texture: "/textures/2k_uranus.jpg",
     orbitSpeed: 0.07,
     rotationSpeed: -1.2,
   },
@@ -89,11 +98,70 @@ export const planetsData: PlanetData[] = [
     radius: 1.45,
     distance: 45,
     color: 0x3344dd,
-    texture: "neptune.jpg",
+    texture: "/textures/2k_neptune.jpg",
     orbitSpeed: 0.05,
     rotationSpeed: 1.1,
   },
 ];
+
+export const astroData: Record<string, astroData[]> = {
+  Tierra: [
+    {
+      name: "Luna",
+      radius: 0.27,
+      distance: 2,
+      texture: "/textures/2k_moon.jpg",
+      orbitSpeed: 0.5,
+      rotationSpeed: 0.1,
+    },
+  ],
+
+  Júpiter: [
+    {
+      name: "Ío",
+      radius: 0.25,
+      distance: 3.2,
+      texture: "/textures/Iomap.png",
+      orbitSpeed: 1.5,
+      rotationSpeed: 0.5,
+    },
+    {
+      name: "Europa",
+      radius: 0.22,
+      distance: 4,
+      texture: "/textures/Europa.jpg",
+      orbitSpeed: 1.1,
+      rotationSpeed: 0.4,
+    },
+    {
+      name: "Ganímedes",
+      radius: 0.35,
+      distance: 5,
+      texture: "/textures/Ganymede_Reworked.png",
+      orbitSpeed: 0.8,
+      rotationSpeed: 0.3,
+    },
+    {
+      name: "Calisto",
+      radius: 0.32,
+      distance: 6,
+      texture: "/textures/Callisto-0.jpg",
+      orbitSpeed: 0.6,
+      rotationSpeed: 0.2,
+    },
+  ],
+
+  Saturno: [
+    {
+      name: "Rings",
+      radius: 0.1,
+      distance: 0,
+      texture: "/textures/saturn_ring.png",
+      orbitSpeed: 0,
+      rotationSpeed: 0,
+    },
+  ],
+};
 
 //funcion para crear las planetas y sus orbitas
 
@@ -145,4 +213,57 @@ function createOrbitLine(radius: number): THREE.LineLoop {
   });
 
   return new THREE.LineLoop(geometry, material);
+}
+
+export function createAstro(parentPlanet: Planet, data: astroData): Planet {
+  const orbit = new THREE.Group();
+
+  orbit.position.copy(parentPlanet.mesh.position);
+  parentPlanet.orbit.add(orbit);
+
+  const geometry = new THREE.SphereGeometry(data.radius, 32, 32);
+  const texture = textureLoader.load(data.texture);
+  texture.colorSpace = THREE.SRGBColorSpace;
+
+  const material = new THREE.MeshStandardMaterial({
+    map: texture,
+    roughness: 0.8,
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.name = data.name;
+  mesh.position.x = data.distance;
+  orbit.add(mesh);
+
+  orbit.add(createOrbitLine(data.distance));
+
+  return {
+    mesh,
+    orbit,
+    orbitSpeed: data.orbitSpeed,
+    rotationSpeed: data.rotationSpeed,
+  };
+}
+
+export function createRings(
+  planet: Planet,
+  innerRadius: number,
+  outerRadius: number,
+  texturePath: string,
+): THREE.Mesh {
+  const geometry = new THREE.RingGeometry(innerRadius, outerRadius, 128);
+  const texture = textureLoader.load(texturePath);
+
+  const material = new THREE.MeshStandardMaterial({
+    map: texture,
+    transparent: true,
+    side: THREE.DoubleSide,
+    roughness: 0.8,
+  });
+
+  const ring = new THREE.Mesh(geometry, material);
+  ring.rotation.x = Math.PI / 2;
+  planet.mesh.add(ring);
+
+  return ring;
 }
